@@ -9,13 +9,19 @@ datasource db {
 }
 
 model User {
-  user_id   Int       @id @default(autoincrement())
-  name      String
-  surname   String?   
-  email     String?   @unique
-  phone     String?   @unique
-  isVerified  Boolean  @default(false)
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  user_id       Int      @id @default(autoincrement())  // Уникальный идентификатор пользователя
+  phone         String?   @unique                        // Номер телефона, уникален, обязательный для подтвержденных пользователей
+  name          String                                  // Имя пользователя, обязательное для заполнения
+  surname       String?                                 // Фамилия, необязательная
+  email         String?  @unique                        // Email, необязательное поле
+  password      String?                                 // Пароль, необязательное поле
+  regStatus     RegStatus                               // Статус регистрации
+  created_at    DateTime @default(now())                // Дата создания записи
+  updated_at    DateTime @updatedAt                     // Дата последнего обновления записи
+}
+
+enum RegStatus {
+  started      // Начало регистрации, номер телефона введен, но еще не подтвержден
+  verified     // Номер телефона подтвержден, регистрация продолжается
+  completed    // Регистрация завершена, все обязательные данные введены
 }
