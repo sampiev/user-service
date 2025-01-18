@@ -7,10 +7,26 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
   constructor(private readonly prismaService: PrismaService) { } // Внедряем PrismaService через DI
 
-  // Создания нового пользователя
+
+  async findOrCreateUserByPhone(phoneNumber: string) {
+    let user = await this.prismaService.prismaClient.user.findUnique({
+      where: { phone: phoneNumber },
+    });
+
+    if (!user) {
+      // Если пользователь не найден, создаем нового
+      user = await this.createUser({ phone: phoneNumber } as CreateUserDto); // Важно: нужно будет передать остальные обязательные поля
+    }
+
+    return user;
+  }
+
+  // Создание нового пользователя
   async createUser(data: CreateUserDto) {
     return this.prismaService.prismaClient.user.create({ data });
   }
+
+
 
   // Получение всех пользователей
   async getAllUsers() {
