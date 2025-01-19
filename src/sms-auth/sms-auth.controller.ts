@@ -3,7 +3,6 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { SmsAuthService } from './sms-auth.service';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { JwtAuthService } from '../auth/jwt.service';
 
 @Controller('sms-auth')
 export class SmsAuthController {

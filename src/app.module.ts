@@ -3,13 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { SmsAuthModule } from './sms-auth/sms-auth.module';
-import { JwtAuthModule } from './auth/jwt.module';
 
 
 
 
 @Module({
-  imports: [UsersModule, SmsAuthModule, JwtAuthModule],
+  imports: [UsersModule, SmsAuthModule],
   controllers: [AppController],
   providers: [AppService],
 })

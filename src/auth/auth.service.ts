@@ -18,22 +18,21 @@
 
 //     async startRegistration(completePhoneDto: CompletePhoneDto): Promise<void> {
 //         const { phone } = completePhoneDto;
-
+      
 //         // Проверяем, существует ли уже пользователь с таким номером
 //         const existingUser = await this.usersService.getUserByPhone(phone);
 //         if (existingUser) {
-
-//             // Если такой пользователь уже существует, просто отправляем код для авторизации
-//             await this.smsAuthService.sendVerificationCode(phone);
-//             return;
+//           // Если такой пользователь уже существует, просто отправляем код для авторизации
+//           await this.smsAuthService.sendVerificationCode(phone);
+//           return;
 //         }
-
+      
 //         // Если пользователь новый, создаем его с начальным статусом
 //         await this.usersService.createUser({ phone, regStatus: 'started' });
-
+      
 //         // Отправляем SMS с кодом подтверждения
 //         await this.smsAuthService.sendVerificationCode(phone);
-//     }
+//       }
 
 
 

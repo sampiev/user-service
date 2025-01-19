@@ -4,17 +4,23 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 
-
 @Controller('users')
 export class UsersController {
     constructor(
         private readonly usersService: UsersService,
     ) { }
 
-    //Создание пользователя
-    @Post()
-    async createUser(@Body() createUserDto: CreateUserDto) {
-        return this.usersService.createUser(createUserDto);
+
+    //Получение пользователя по ID
+    @Get(':id')
+    async getUserById(@Param('id', ParseIntPipe) id: number) {
+        return this.usersService.getUserById(id);
+    }
+
+    //Получение пользователя по номеру телефона
+    @Get('phone/:phone')
+    async getUserByPhone(@Param('phone') phone: string) {
+        return this.usersService.getUserByPhone(phone);
     }
 
     //Получение всех пользователей
@@ -23,19 +29,15 @@ export class UsersController {
         return this.usersService.getAllUsers();
     }
 
-    //Получение пользователя по ID
-    @Get(':id')
-    async getUserById(
-        @Param('id', ParseIntPipe) id: number) {
-        return this.usersService.getUserById(id);
+    //Создание пользователя
+    @Post()
+    async createUser(@Body() createUserDto: CreateUserDto) {
+        return this.usersService.createUser(createUserDto);
     }
 
     //Изменение пользователя по ID
     @Put(':id')
-    async updateUser(
-        @Param('id') id: number,
-        @Body() updateData: UpdateUserDto
-    ) {
+    async updateUser(@Param('id') id: number, @Body() updateData: UpdateUserDto) {
         return this.usersService.updateUser(id, updateData);
     }
 

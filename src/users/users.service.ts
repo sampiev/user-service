@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -8,14 +8,39 @@ export class UsersService {
   constructor(private prismaService: PrismaService) { }
 
 
+  async getUserByPhone(phone: string) {
+    try {
+      const user = await this.prismaService.prismaClient.user.findUnique({
+        where: { phone },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  // Получение пользователя по ID
+  async getUserById(userId: number) {
+    const user = await this.prismaService.prismaClient.user.findUnique({
+      where: { user_id: userId },
+    });
+    return user;
+  }
+
+
   // Создание нового пользователя
   async createUser(data: CreateUserDto) {
-    return this.prismaService.getPrismaClient.user.create({ data });
+    return this.prismaService.prismaClient.user.create({ data });
   }
 
 
   async findOrCreateUserByPhone(phoneNumber: string) {
-    let user = await this.prismaService.getPrismaClient.user.findUnique({
+    let user = await this.prismaService.prismaClient.user.findUnique({
       where: { phone: phoneNumber },
     });
     if (!user) {
@@ -27,24 +52,10 @@ export class UsersService {
 
   // Получение всех пользователей
   async getAllUsers() {
-    return this.prismaService.getPrismaClient.user.findMany();
-  }
-
-  // Получение пользователя по ID
-  async getUserById(userId: number) {
-    const user = await this.prismaService.getPrismaClient.user.findUnique({
-      where: { user_id: userId },
-    });
-    return user;
+    return this.prismaService.prismaClient.user.findMany();
   }
 
 
-  // Получение пользователя по номеру телефона
-  async getUserByPhone(phone: string) {
-    return this.prismaService.getPrismaClient.user.findUnique({
-      where: { phone },
-    });
-  }
 
 
 
@@ -53,7 +64,7 @@ export class UsersService {
     const user = +userId;
 
     try {
-      return await this.prismaService.getPrismaClient.user.update({
+      return await this.prismaService.prismaClient.user.update({
         where: { user_id: user },
         data: updateData,
       });
@@ -64,7 +75,7 @@ export class UsersService {
 
   // Метод для удаления пользователя
   async deleteUser(userId: number) {
-    return this.prismaService.getPrismaClient.user.delete({
+    return this.prismaService.prismaClient.user.delete({
       where: { user_id: userId },
     });
   }

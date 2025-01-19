@@ -4,15 +4,15 @@ import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
-  private prismaClient: PrismaClient;
+  private prisma: PrismaClient;
 
 
   constructor() {
-    this.prismaClient = new PrismaClient();
+    this.prisma = new PrismaClient();
   }
 
-  public get getPrismaClient(): PrismaClient {
-    return this.prismaClient;
+  public get prismaClient(): PrismaClient {
+    return this.prisma;
   }
 
   async onModuleInit() {
