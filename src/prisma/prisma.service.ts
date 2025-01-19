@@ -4,19 +4,21 @@ import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
-  public prismaClient: PrismaClient; //Cоздаем приватное свойство для хранения экземпляра PrismaClient
+  private prismaClient: PrismaClient;
+
 
   constructor() {
-    // Создаем экземпляр PrismaClient
     this.prismaClient = new PrismaClient();
   }
 
-  // Метод, вызываемый при инициализации модуля
+  public get getPrismaClient(): PrismaClient {
+    return this.prismaClient;
+  }
+
   async onModuleInit() {
     await this.prismaClient.$connect();
   }
 
-  // Метод, вызываемый при завершении работы модуля
   async onModuleDestroy() {
     await this.prismaClient.$disconnect();
   }

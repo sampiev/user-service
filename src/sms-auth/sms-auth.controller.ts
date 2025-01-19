@@ -10,7 +10,6 @@ export class SmsAuthController {
     constructor(
         private readonly smsAuthService: SmsAuthService,
         private readonly usersService: UsersService,
-        private readonly jwtAuthService: JwtAuthService,
     ) { }
 
     // Endpoint для отправки SMS с кодом
@@ -39,7 +38,8 @@ export class SmsAuthController {
             name: 'Default Name',  // Поставить значения по умолчанию
             surname: 'Default Surname',
             email: 'default@example.com',
-            password: 'defaultpassword'
+            password: 'defaultpassword',
+            regStatus: 'started',
         };
         await this.usersService.createUser(newUser);
 

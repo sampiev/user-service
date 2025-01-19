@@ -10,14 +10,16 @@ export class CreateUserDto {
     surname: string;
 
     @IsEmail()
-    @IsOptional()
     email: string;
 
     @IsPhoneNumber(null)
-    @IsOptional()
     phone: string;
 
     @IsString()
-    @IsNotEmpty()
     password: string;
+
+    @IsString()
+    regStatus: 'started';
+
+
 }
