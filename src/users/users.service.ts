@@ -8,22 +8,6 @@ export class UsersService {
   constructor(private prismaService: PrismaService) { }
 
 
-  async getUserByPhone(phone: string) {
-    try {
-      const user = await this.prismaService.prismaClient.user.findUnique({
-        where: { phone },
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      return user;
-    } catch (error) {
-      throw new InternalServerErrorException();
-    }
-  }
-
   // Получение пользователя по ID
   async getUserById(userId: number) {
     const user = await this.prismaService.prismaClient.user.findUnique({
@@ -32,6 +16,13 @@ export class UsersService {
     return user;
   }
 
+  // Получение пользователя по номеру телефона
+  async getUserByPhone(phone: string) {
+    const user = await this.prismaService.prismaClient.user.findUnique({
+      where: { phone },
+    });
+    return user;
+  }
 
   // Создание нового пользователя
   async createUser(data: CreateUserDto) {
@@ -54,9 +45,6 @@ export class UsersService {
   async getAllUsers() {
     return this.prismaService.prismaClient.user.findMany();
   }
-
-
-
 
 
   // Обновление пользователя по ID
