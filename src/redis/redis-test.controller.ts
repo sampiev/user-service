@@ -54,4 +54,10 @@ export class RedisTestController {
         }
         return `Invalid code for ${phone}.`;
     }
+
+    @Get('get-code')
+    async getCode(@Query('phone') phone: string): Promise<any> {
+        const code = await this.redisService.get(`sms:${phone}`);
+        return code ? `Code for ${phone}: ${code}` : 'No code found!';
+    }
 }
