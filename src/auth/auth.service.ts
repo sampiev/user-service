@@ -1,42 +1,44 @@
-// import { Injectable, BadRequestException } from '@nestjs/common';
-// import { SmsAuthService } from '../sms-auth/sms-auth.service';
-// import { UsersService } from '../users/users.service';
-// import { CompletePhoneDto } from './dto/complete-phone.dto';  // DTO для начала регистрации (номер телефона)
-// import { VerifySmsDto } from './dto/verify-sms.dto';  // DTO для верификации телефона (ввод кода)
-// import { CompleteRegistrationDto } from './dto/complete-registration.dto';  // DTO для завершения регистрации (имя, фамилия, email)
-// import { User } from '@prisma/client';  // Типизация для пользователя
+import { Injectable } from '@nestjs/common';
+import { RedisService } from '../redis/redis.service';
+import * as crypto from 'crypto';
+import { UsersService } from '../users/users.service';
+import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 
+@Injectable()
+export class AuthService {
+    constructor(
+        private readonly redisService: RedisService,
+        private readonly usersService: UsersService,
+        private readonly jwtService: JwtService,
+    ) { }
 
-// @Injectable()
-// export class AuthService {
+    // Генерация и сохранение кода в Redis
+    async generateAndStoreCode(phone: string): Promise<string> {
+        const code = this.generateCode();
+        // Сохраняем код с TTL 10 минут
+        await this.redisService.set(`verification_code:${phone}`, code, 600);
+        return code;
+    }
 
-//     constructor(
-//         private readonly usersService: UsersService,
-//         private readonly smsAuthService: SmsAuthService,
-//     ) { }
+    // Проверка кода, который был введен пользователем
+    async verifyCode(phone: string, code: string): Promise<boolean> {
+        const savedCode = await this.redisService.get<string>(`verification_code:${phone}`);
+        return savedCode === code;
+    }
 
+    // Создание JWT токена
+    async createToken(user: User): Promise<string> {
+        const payload = { userId: user.user_id, phone: user.phone };
+        return this.jwtService.sign(payload);
+    }
 
-//     async startRegistration(completePhoneDto: CompletePhoneDto): Promise<void> {
-//         const { phone } = completePhoneDto;
-      
-//         // Проверяем, существует ли уже пользователь с таким номером
-//         const existingUser = await this.usersService.getUserByPhone(phone);
-//         if (existingUser) {
-//           // Если такой пользователь уже существует, просто отправляем код для авторизации
-//           await this.smsAuthService.sendVerificationCode(phone);
-//           return;
-//         }
-      
-//         // Если пользователь новый, создаем его с начальным статусом
-//         await this.usersService.createUser({ phone, regStatus: 'started' });
-      
-//         // Отправляем SMS с кодом подтверждения
-//         await this.smsAuthService.sendVerificationCode(phone);
-//       }
+    // Генерация случайного кода
+    private generateCode(): string {
+        return crypto.randomInt(100000, 999999).toString();
+    }
+}
 
-
-
-// }
 
 
 
