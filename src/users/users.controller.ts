@@ -18,34 +18,34 @@ export class UsersController {
     }
 
     //Получение пользователя по номеру телефона
-    @Get('phone/:phone')
-    async getUserByPhone(@Param('phone') phone: string) {
-        return this.usersService.getUserByPhone(phone);
-    }
+    // @Get('phone/:phone')
+    // async getUserByPhone(@Param('phone') phone: string) {
+    //     return this.usersService.getUserByPhone(phone);
+    // }
 
     //Получение всех пользователей
-    @Get()
-    async getAllUsers() {
-        return this.usersService.getAllUsers();
-    }
+    // @Get()
+    // async getAllUsers() {
+    //     return this.usersService.getAllUsers();
+    // }
 
     //Создание пользователя
-    @Post()
-    async createUser(@Body() createUserDto: CreateUserDto) {
-        return this.usersService.createUser(createUserDto);
-    }
+    // @Post()
+    // async createUser(@Body() createUserDto: CreateUserDto) {
+    //     return this.usersService.createUser(createUserDto);
+    // }
 
     //Изменение пользователя по ID
-    @Put(':id')
-    async updateUser(@Param('id') id: number, @Body() updateData: UpdateUserDto) {
-        return this.usersService.updateUser(id, updateData);
-    }
+    // @Put(':id')
+    // async updateUser(@Param('id') id: number, @Body() updateData: UpdateUserDto) {
+    //     return this.usersService.updateUser(id, updateData);
+    // }
 
-    //Удаление пользователя по ID
-    @Delete(':id')
-    async deleteUser(@Param('id') id: number) {
-        return this.usersService.deleteUser(Number(id));
-    }
+    // //Удаление пользователя по ID
+    // @Delete(':id')
+    // async deleteUser(@Param('id') id: number) {
+    //     return this.usersService.deleteUser(Number(id));
+    // }
 
 }
 

@@ -13,13 +13,18 @@ export class RedisService implements OnModuleDestroy {
     this.client = new Redis(options);
   }
 
+
+
+
   // Генерация и хранение кода с защитой от спама по IP и номеру телефона
   async generateAndStoreCode(phone: string, ip: string): Promise<string> {
     this.logger.log(`Attempting to generate code for phone ${phone} from IP ${ip}`);
 
+    // Проверяем TTL для текущего ключа
     const phoneKey = `sms:${phone}`;
-    const ttl = await this.client.ttl(phoneKey);  // Проверяем TTL для текущего ключа
+    const ttl = await this.client.ttl(phoneKey);
 
+    //
     if (ttl > 0 && ttl > 240) {
       this.logger.warn(`Code already sent recently for phone ${phone}`);
       throw new Error('Code already sent. Please wait before retrying.');
@@ -58,6 +63,30 @@ export class RedisService implements OnModuleDestroy {
     // Возвращаем код
     return code;
   }
+
+
+
+
+
+
+
+  async storeTempUser(phone: string, data: any, ttl = 900): Promise<void> {
+    await this.client.set(`temp_user:${phone}`, JSON.stringify(data), 'EX', ttl);
+  }
+
+
+
+
+  async getTempUser(phone: string): Promise<any> {
+    const data = await this.client.get(`temp_user:${phone}`);
+    return data ? JSON.parse(data) : null;
+  }
+
+  async deleteTempUser(phone: string): Promise<void> {
+    await this.client.del(`temp_user:${phone}`);
+  }
+
+
 
 
 

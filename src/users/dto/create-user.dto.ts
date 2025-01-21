@@ -2,7 +2,6 @@ import { IsString, IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber } from 'class-
 
 export class CreateUserDto {
     @IsString()
-    @IsNotEmpty()
     name: string;
 
     @IsString()

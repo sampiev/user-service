@@ -17,38 +17,38 @@ export class UsersService {
   }
 
   // Получение пользователя по номеру телефона
-  async getUserByPhone(phone: string) {
-    const user = await this.prismaService.prismaClient.user.findUnique({
-      where: { phone },
-    });
-    return user;
-  }
+  // async getUserByPhone(phone: string) {
+  //   const user = await this.prismaService.prismaClient.user.findUnique({
+  //     where: { phone },
+  //   });
+  //   return user;
+  // }
 
   // Создание нового пользователя
-  async createUser(data: CreateUserDto) {
-    return this.prismaService.prismaClient.user.create({ data });
-  }
+  // async createUser(data: CreateUserDto) {
+  //   return this.prismaService.prismaClient.user.create({ data });
+  // }
 
 
-  async findOrCreateUserByPhone(phoneNumber: string) {
-    console.log('Phone number:', phoneNumber);  // Логируем телефонный номер
+  // async findOrCreateUserByPhone(phoneNumber: string) {
+  //   console.log('Phone number:', phoneNumber);  // Логируем телефонный номер
 
-    if (!phoneNumber || typeof phoneNumber !== 'string' || phoneNumber.trim() === '') {
-      throw new Error('Phone number is required');
-    }
+  //   if (!phoneNumber || typeof phoneNumber !== 'string' || phoneNumber.trim() === '') {
+  //     throw new Error('Phone number is required');
+  //   }
 
-    let user = await this.prismaService.prismaClient.user.findUnique({
-      where: {
-        phone: phoneNumber,
-      },
-    });
+  //   let user = await this.prismaService.prismaClient.user.findUnique({
+  //     where: {
+  //       phone: phoneNumber,
+  //     },
+  //   });
 
-    if (!user) {
-      user = await this.createUser({ phone: phoneNumber } as CreateUserDto);
-    }
+  //   if (!user) {
+  //     user = await this.createUser({ phone: phoneNumber } as CreateUserDto);
+  //   }
 
-    return user;
-  }
+  //   return user;
+  // }
 
 
   // Получение всех пользователей

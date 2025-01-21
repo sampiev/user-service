@@ -1,6 +1,7 @@
-import { IsPhoneNumber } from 'class-validator';
+import { IsNotEmpty, IsPhoneNumber } from 'class-validator';
 
 export class CompletePhoneDto {
-    @IsPhoneNumber()
-    phone: string;
+    @IsNotEmpty({ message: 'Phone number is required' })
+    @IsPhoneNumber(null, { message: 'Invalid phone number format' })
+    phone_number: string;
 }

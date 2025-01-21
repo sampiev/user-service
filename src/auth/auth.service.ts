@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
+import { CompletePhoneDto } from './dto/complete-phone.dto'
 
 @Injectable()
 export class AuthService {
@@ -13,44 +14,30 @@ export class AuthService {
         private readonly jwtService: JwtService,
     ) { }
 
-    async register(phone: string) {
-        console.log('Registering user with phone:', phone);
-        // Здесь можно добавить проверку номера, например через регулярные выражения или другие критерии
+    // Метод для обработки ввода телефона
+    async phoneAuth(dto: CompletePhoneDto): Promise<string> {
+        const { phone_number } = dto;
 
-        // Вызываем метод usersService для создания или поиска пользователя
-        const user = await this.usersService.findOrCreateUserByPhone(phone);
+        // Генерация кода и временное хранение в Redis
+        const code = Math.floor(1000 + Math.random() * 9000).toString();
 
-        // Далее можно генерировать и возвращать JWT или другие данные по вашему требованию
-        const payload = { phone: user.phone };  // Добавьте нужные данные из user
-        const token = this.jwtService.sign(payload);
+        await this.redisService.storeTempUser(phone_number, {
+            phone_number,
+            code,
+            createdAt: new Date(),
+        });
 
-        return { token };  // Отправляем JWT в ответ
+        // Код отправки SMS или Push OTP (можно реализовать тут).
+        // await this.someSmsService.sendSms(phone_number, `Ваш код: ${code}`);
+
+        return `Код отправлен на номер ${phone_number}`;
     }
 
-    // Генерация и сохранение кода в Redis
-    async generateAndStoreCode(phone: string): Promise<string> {
-        const code = this.generateCode();
-        // Сохраняем код с TTL 10 минут
-        await this.redisService.set(`verification_code:${phone}`, code, 600);
-        return code;
-    }
 
-    // Проверка кода, который был введен пользователем
-    async verifyCode(phone: string, code: string): Promise<boolean> {
-        const savedCode = await this.redisService.get<string>(`verification_code:${phone}`);
-        return savedCode === code;
-    }
 
-    // Создание JWT токена
-    async createToken(user: User): Promise<string> {
-        const payload = { userId: user.user_id, phone: user.phone };
-        return this.jwtService.sign(payload);
-    }
 
-    // Генерация случайного кода
-    private generateCode(): string {
-        return crypto.randomInt(100000, 999999).toString();
-    }
+
+
 }
 
 

@@ -1,9 +1,10 @@
 
-import { Controller, Get, Post, Body, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, BadRequestException, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { User } from '@prisma/client';
+import { CompletePhoneDto } from './dto/complete-phone.dto';
+import { Logger } from '@nestjs/common';
 
 @Controller('auth')
 export class AuthController {
@@ -12,49 +13,31 @@ export class AuthController {
         private readonly usersService: UsersService,
     ) { }
 
-    // Регистрация пользователя
-    // @Post('register')
-    // async register(@Body() createUserDto: CreateUserDto, @Query('phone') phone: string) {
-    //     const user = await this.usersService.findOrCreateUserByPhone(phone);
-    //     if (user) {
-    //         throw new BadRequestException('User already registered');
-    //     }
-    //     const newUser = await this.usersService.createUser(createUserDto);
-    //     return newUser;
+    private readonly logger = new Logger(AuthController.name);
+
+    // Маршрут для ввода номера телефона
+    @Post('phone-auth')
+    @HttpCode(HttpStatus.OK)
+    async phoneAuth(@Body() dto: CompletePhoneDto): Promise<string> {
+        try {
+            return await this.authService.phoneAuth(dto);
+        } catch (error) {
+            this.logger.error('Ошибка при аутентификации по телефону', error);
+            throw error;
+        }
+
+
+    }
+
+    // // Маршрут для проверки кода подтверждения
+    // @Post('verify')
+    // @HttpCode(HttpStatus.OK)
+    // async verifyCode(
+    //     @Body('phone_number') phone_number: string,
+    //     @Body('code') code: string,
+    // ): Promise<string> {
+    //     return await this.authService.verifyCode(phone_number, code);
     // }
 
-    @Post('register')
-    async register(@Body() body: { phone: string }) {
-        if (!body || !body.phone) {
-            throw new Error('Phone number is required');
-        }
 
-        // Используем метод register в сервисе Auth
-        return this.authService.register(body.phone);
-    }
-
-
-    // Отправка кода на телефон
-    @Get('send-code')
-    async sendCode(@Query('phone') phone: string) {
-        const code = await this.authService.generateAndStoreCode(phone);
-        return { message: `Verification code sent to ${phone}`, code }; // Реально отправка через SMS будет позже
-    }
-
-    // Подтверждение кода
-    @Post('verify-code')
-    async verifyCode(@Query('phone') phone: string, @Body('code') code: string) {
-        const isValid = await this.authService.verifyCode(phone, code);
-        if (!isValid) {
-            throw new BadRequestException('Invalid verification code');
-        }
-
-        const user = await this.usersService.getUserByPhone(phone);
-        if (!user) {
-            throw new BadRequestException('User not found');
-        }
-
-        const token = await this.authService.createToken(user);
-        return { token };
-    }
 }

@@ -9,19 +9,21 @@ datasource db {
 }
 
 model User {
-  user_id       Int      @id @default(autoincrement())  // Уникальный идентификатор пользователя
-  phone         String?   @unique                        // Номер телефона, уникален, обязательный для подтвержденных пользователей
-  name          String                                  // Имя пользователя, обязательное для заполнения
-  surname       String?                                 // Фамилия, необязательная
-  email         String?  @unique                        // Email, необязательное поле
-  password      String?                                 // Пароль, необязательное поле
-  regStatus     RegStatus                               // Статус регистрации
-  created_at    DateTime @default(now())                // Дата создания записи
-  updated_at    DateTime @updatedAt                     // Дата последнего обновления записи
+  user_id          Int @id @default(autoincrement())
+  phone_number     String? @unique
+  email            String? @unique
+  name             String?
+  surname          String?
+  password         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  statusId         Int
+  status           UserStatus @relation(fields: [statusId], references: [id])
 }
 
-enum RegStatus {
-  started      // Начало регистрации, номер телефона введен, но еще не подтвержден
-  verified     // Номер телефона подтвержден, регистрация продолжается
-  completed    // Регистрация завершена, все обязательные данные введены
+model UserStatus {
+  id               Int @id @default(autoincrement())
+  name             String @unique
+  createdAt        DateTime @default(now())
+  users            User[]
 }
