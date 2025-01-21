@@ -13,15 +13,26 @@ export class AuthController {
     ) { }
 
     // Регистрация пользователя
+    // @Post('register')
+    // async register(@Body() createUserDto: CreateUserDto, @Query('phone') phone: string) {
+    //     const user = await this.usersService.findOrCreateUserByPhone(phone);
+    //     if (user) {
+    //         throw new BadRequestException('User already registered');
+    //     }
+    //     const newUser = await this.usersService.createUser(createUserDto);
+    //     return newUser;
+    // }
+
     @Post('register')
-    async register(@Body() createUserDto: CreateUserDto, @Query('phone') phone: string) {
-        const user = await this.usersService.findOrCreateUserByPhone(phone);
-        if (user) {
-            throw new BadRequestException('User already registered');
+    async register(@Body() body: { phone: string }) {
+        if (!body || !body.phone) {
+            throw new Error('Phone number is required');
         }
-        const newUser = await this.usersService.createUser(createUserDto);
-        return newUser;
+
+        // Используем метод register в сервисе Auth
+        return this.authService.register(body.phone);
     }
+
 
     // Отправка кода на телефон
     @Get('send-code')

@@ -5,12 +5,13 @@ import { UsersModule } from './users/users.module';
 import { SmsAuthModule } from './sms-auth/sms-auth.module';
 import { RedisModule } from './redis/redis.module';
 import { RedisTestController } from './redis/redis-test.controller';
+import { AuthModule } from './auth/auth.module';
 
 
 
 
 @Module({
-  imports: [UsersModule, SmsAuthModule, RedisModule,
+  imports: [UsersModule, RedisModule, AuthModule,
     RedisModule.register({
       host: 'localhost',
       port: 6379,

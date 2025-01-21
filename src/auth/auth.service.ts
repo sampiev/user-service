@@ -13,6 +13,20 @@ export class AuthService {
         private readonly jwtService: JwtService,
     ) { }
 
+    async register(phone: string) {
+        console.log('Registering user with phone:', phone);
+        // Здесь можно добавить проверку номера, например через регулярные выражения или другие критерии
+
+        // Вызываем метод usersService для создания или поиска пользователя
+        const user = await this.usersService.findOrCreateUserByPhone(phone);
+
+        // Далее можно генерировать и возвращать JWT или другие данные по вашему требованию
+        const payload = { phone: user.phone };  // Добавьте нужные данные из user
+        const token = this.jwtService.sign(payload);
+
+        return { token };  // Отправляем JWT в ответ
+    }
+
     // Генерация и сохранение кода в Redis
     async generateAndStoreCode(phone: string): Promise<string> {
         const code = this.generateCode();

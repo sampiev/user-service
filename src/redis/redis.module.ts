@@ -1,7 +1,7 @@
-import { DynamicModule, Module } from '@nestjs/common';
-import Redis, { RedisOptions } from 'ioredis';
+import { Module, DynamicModule } from '@nestjs/common';
 import { RedisService } from './redis.service';
 import { REDIS_OPTIONS } from './redis.constants';
+import Redis, { RedisOptions } from 'ioredis';
 
 @Module({})
 export class RedisModule {
@@ -18,10 +18,11 @@ export class RedisModule {
           provide: REDIS_OPTIONS, // Передача настроек в виде токена
           useValue: options,
         },
-        RedisService,
+        RedisService, // Обязательно добавляем RedisService
       ],
-      exports: [RedisService], // Экспорт RedisService для использования в других модулях
+      exports: [RedisService], // Экспортируем RedisService для использования в других модулях
     };
   }
 }
+
 

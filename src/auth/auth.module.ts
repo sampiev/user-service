@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { RedisModule } from '../redis/redis.module';
@@ -7,8 +7,12 @@ import { JwtModule } from '@nestjs/jwt';
 
 @Module({
     imports: [
-        RedisModule,
-        UsersModule,
+        RedisModule.register({
+            host: 'localhost',  // Параметры подключения к Redis
+            port: 6379,
+            password: 'mypassword',
+        }),
+        forwardRef(() => UsersModule),
         JwtModule.register({
             secret: 'yourSecretKey', // Используйте секретный ключ для генерации JWT
             signOptions: { expiresIn: '1h' }, // Срок жизни токена (можно изменить)

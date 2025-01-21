@@ -31,12 +31,22 @@ export class UsersService {
 
 
   async findOrCreateUserByPhone(phoneNumber: string) {
+    console.log('Phone number:', phoneNumber);  // Логируем телефонный номер
+
+    if (!phoneNumber || typeof phoneNumber !== 'string' || phoneNumber.trim() === '') {
+      throw new Error('Phone number is required');
+    }
+
     let user = await this.prismaService.prismaClient.user.findUnique({
-      where: { phone: phoneNumber },
+      where: {
+        phone: phoneNumber,
+      },
     });
+
     if (!user) {
       user = await this.createUser({ phone: phoneNumber } as CreateUserDto);
     }
+
     return user;
   }
 
