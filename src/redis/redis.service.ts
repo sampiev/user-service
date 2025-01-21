@@ -13,36 +13,71 @@ export class RedisService implements OnModuleDestroy {
     this.client = new Redis(options);
   }
 
-  // Генерация и сохранение кода
-  async generateAndStoreCode(phone: string): Promise<string> {
-    this.logger.log(`Attempting to generate code for phone ${phone}`);  // Логирование до генерации
+  // Генерация и хранение кода с защитой от спама по IP и номеру телефона
+  async generateAndStoreCode(phone: string, ip: string): Promise<string> {
+    this.logger.log(`Attempting to generate code for phone ${phone} from IP ${ip}`);
 
-    const key = `sms:${phone}`;
-    const ttl = await this.client.ttl(key);  // Получаем TTL для текущего ключа
+    const phoneKey = `sms:${phone}`;
+    const ttl = await this.client.ttl(phoneKey);  // Проверяем TTL для текущего ключа
 
     if (ttl > 0 && ttl > 240) {
       this.logger.warn(`Code already sent recently for phone ${phone}`);
       throw new Error('Code already sent. Please wait before retrying.');
     }
 
+    // Лимит на количество запросов для одного номера (1 запрос в минуту)
+    const requestLimitKey = `sms-req-limit:${phone}`;
+    const requestCount = await this.client.get(requestLimitKey);
+
+    if (requestCount && parseInt(requestCount) >= 1) {
+      throw new Error('Too many requests. Please wait for a minute before trying again.');
+    }
+
+    // Лимит для одного IP (например, 5 попыток за минуту)
+    const ipLimitKey = `sms-ip-limit:${ip}`;
+    const ipRequestCount = await this.client.get(ipLimitKey);
+
+    if (ipRequestCount && parseInt(ipRequestCount) >= 5) {
+      throw new Error('Too many requests from your IP. Please wait for a minute before trying again.');
+    }
+
     // Генерация 4-значного кода
     const code = Math.floor(1000 + Math.random() * 9000).toString();
-    this.logger.log(`Generated code for phone ${phone}: ${code}`);  // Логирование сгенерированного кода
+    this.logger.log(`Generated code for phone ${phone}: ${code}`);
 
-    // Сохранение в Redis с сроком хранения 5 минут (300 секунд)
-    await this.set(key, code, 300);
+    // Сохранение кода в Redis с TTL 5 минут (300 секунд)
+    await this.set(phoneKey, code, 300);
 
-    return code;  // Возвращаем сгенерированный код
+    // Устанавливаем лимит на запросы для IP и номера (например, 5 попыток в минуту)
+    await this.client.incr(ipLimitKey);
+    await this.client.expire(ipLimitKey, 60);  // Жизнь ключа — 60 секунд
+
+    // Устанавливаем лимит для одного номера (1 запрос в минуту)
+    await this.client.setex(requestLimitKey, 60, '1'); // Лимит 1 запрос в минуту
+
+    // Возвращаем код
+    return code;
   }
+
+
+
+
+
+
+
+
+
 
   // Отправка кода (вместо реальной отправки, просто логируем)
   async sendCode(phone: string): Promise<void> {
-    const code = await this.generateAndStoreCode(phone);  // Генерация и сохранение кода
+    const ip = '127.0.0.1';  // Фиктивный IP для теста
+    const code = await this.generateAndStoreCode(phone, ip);  // Генерация и сохранение кода
     this.logger.log(`Verification code sent for phone ${phone}: ${code}`);
     // Здесь можно добавить реальную отправку через SMS-сервис в будущем.
   }
 
-  // Метод для записи данных
+
+  // Метод для записи данных в Redis
   async set(key: string, value: any, expireInSeconds?: number): Promise<string> {
     const data = JSON.stringify(value);
     if (expireInSeconds) {

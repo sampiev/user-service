@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Request } from '@nestjs/common';
 import { RedisService } from './redis.service';
 
 @Controller('redis-test')
@@ -25,20 +25,31 @@ export class RedisTestController {
 
     @Get('generate-code')
     async generateCode(): Promise<string> {
-        const phone = '79991234567'; // Пример телефона для генерации кода
-        const code = await this.redisService.generateAndStoreCode(phone);
+        const phone = '79991234567';  // Пример телефона для генерации кода
+        const ip = '127.0.0.1';       // Фиктивный IP для теста
+
+        // Теперь передаем и номер телефона, и IP-адрес
+        const code = await this.redisService.generateAndStoreCode(phone, ip);
+
         return `Verification code sent for ${phone}. Check logs for code.`;
     }
 
     // Отправка кода
     @Get('send-code')
-    async sendCode(@Query('phone') phone: string): Promise<string> {
+    async sendCode(@Query('phone') phone: string, @Request() req): Promise<string> {
         if (!phone) {
             return 'Phone number is required!';
         }
 
-        await this.redisService.sendCode(phone);
-        return `Verification code sent for ${phone}. Check logs for code.`;
+        try {
+            // Добавляем IP-адрес клиента, поступающий из запроса
+            const ip = req.ip;
+
+            await this.redisService.generateAndStoreCode(phone, ip);
+            return `Verification code sent for ${phone}. Check logs for code.`;
+        } catch (error) {
+            return error.message || 'Something went wrong!';
+        }
     }
 
     // Валидация кода
@@ -53,11 +64,5 @@ export class RedisTestController {
             return `Code validated successfully for ${phone}.`;
         }
         return `Invalid code for ${phone}.`;
-    }
-
-    @Get('get-code')
-    async getCode(@Query('phone') phone: string): Promise<any> {
-        const code = await this.redisService.get(`sms:${phone}`);
-        return code ? `Code for ${phone}: ${code}` : 'No code found!';
     }
 }
