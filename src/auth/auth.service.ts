@@ -1,44 +1,79 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
-import * as crypto from 'crypto';
-import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
-import { CompletePhoneDto } from './dto/complete-phone.dto'
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private readonly redisService: RedisService,
-        private readonly usersService: UsersService,
-        private readonly jwtService: JwtService,
-    ) { }
+    private readonly logger = new Logger(AuthService.name);
 
-    // Метод для обработки ввода телефона
-    async phoneAuth(dto: CompletePhoneDto): Promise<string> {
-        const { phone_number } = dto;
+    constructor(private readonly redisService: RedisService) { }
 
-        // Генерация кода и временное хранение в Redis
-        const code = Math.floor(1000 + Math.random() * 9000).toString();
 
-        await this.redisService.storeTempUser(phone_number, {
-            phone_number,
-            code,
-            createdAt: new Date(),
-        });
-
-        // Код отправки SMS или Push OTP (можно реализовать тут).
-        // await this.someSmsService.sendSms(phone_number, `Ваш код: ${code}`);
-
-        return `Код отправлен на номер ${phone_number}`;
+    async sendVerificationCode(phone: string): Promise<void> {
+        const code = this.generateCode(); // Ваша функция генерации кода
+        try {
+            await this.redisService.storePhoneAndCode(phone, code);
+            // Отправка SMS с кодом (асинхронная операция)
+            this.sendSms(phone, code); // Отдельная функция отправки СМС.
+        } catch (error) {
+            // Обработка ошибки сохранения в Redis. Очень важно!
+            console.error("Failed to store phone and code", error)
+            throw new Error('Failed to send verification code.'); // Или другая обработка
+        }
     }
 
+    async verifyCode(phone: string, code: string): Promise<boolean> {
+        try {
+            const storedCode = await this.redisService.getCodeByPhone(phone);
+            if (storedCode === code) {
+                return true
+            } else {
+                return false
+            }
+        } catch (error) {
+            console.error("Failed to get code from redis", error)
+            return false
+        }
+    }
+    private generateCode(): string {
+        return Math.floor(1000 + Math.random() * 9000).toString();
+    }
+    private sendSms(phone: string, code: string) {
+        // тут отправка смс
+        console.log(`Sending SMS to ${phone} with code ${code}`)
+    }
+
+    // /**
+    //  * Генерация кода и сохранение номера телефона и кода в Redis
+    //  * @param phone_number - Номер телефона пользователя
+    //  */
+    // async handlePhoneAuth(phone_number: string): Promise<void> {
+    //     try {
+    //         // Генерация 4-значного кода подтверждения
+    //         const code = this.generateVerificationCode();
+    //         this.logger.log(`Generated code for ${phone_number}: ${code}`);
+
+    //         // Сохранение в Redis (ключ — номер телефона)
+    //         const ttl = 300; // Время жизни данных в секундах (5 минут)
+    //         await this.redisService.set(`phone:${phone_number}`, code, ttl);
+
+    //         // Включите здесь логику отправки кода (e.g., SMS API)
+    //         this.logger.log(`Code saved to Redis for ${phone_number}`);
+    //     } catch (error) {
+    //         this.logger.error('Error handling phone authentication:', error.message);
+    //         throw error;
+    //     }
+    // }
 
 
-
-
-
+    // /**
+    //  * Генерация 4-значного кода подтверждения
+    //  * @returns Четырехзначный код
+    //  */
+    // private generateVerificationCode(): string {
+    //     return Math.floor(1000 + Math.random() * 9000).toString();
+    // }
 }
+
 
 
 

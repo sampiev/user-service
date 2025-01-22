@@ -2,9 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
-import { SmsAuthModule } from './sms-auth/sms-auth.module';
 import { RedisModule } from './redis/redis.module';
-import { RedisTestController } from './redis/redis-test.controller';
 import { AuthModule } from './auth/auth.module';
 
 
@@ -18,7 +16,7 @@ import { AuthModule } from './auth/auth.module';
       password: 'mypassword'
     })
   ],
-  controllers: [AppController, RedisTestController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule { }
