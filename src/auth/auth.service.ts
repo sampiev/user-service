@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 
 @Injectable()
@@ -9,16 +9,20 @@ export class AuthService {
 
 
     async sendVerificationCode(phone: string): Promise<void> {
-        const code = this.generateCode(); // Ваша функция генерации кода
+        this.logger.log('AuthService: sendVerificationCode - START');
+        const code = this.generateCode();
+        this.logger.log(`AuthService: sendVerificationCode - Generated code: ${code}`);
         try {
+            this.logger.log(`AuthService: sendVerificationCode - Calling redisService.storePhoneAndCode`);
             await this.redisService.storePhoneAndCode(phone, code);
-            // Отправка SMS с кодом (асинхронная операция)
-            this.sendSms(phone, code); // Отдельная функция отправки СМС.
+            this.logger.log(`AuthService: sendVerificationCode - redisService.storePhoneAndCode completed`);
+            this.sendSms(phone, code);
+            this.logger.log(`AuthService: sendVerificationCode - sendSms completed`);
         } catch (error) {
-            // Обработка ошибки сохранения в Redis. Очень важно!
-            console.error("Failed to store phone and code", error)
-            throw new Error('Failed to send verification code.'); // Или другая обработка
+            this.logger.error('AuthService: sendVerificationCode - ERROR:', error);
+            throw error;
         }
+        this.logger.log('AuthService: sendVerificationCode - END'); // Лог в конце функции
     }
 
     async verifyCode(phone: string, code: string): Promise<boolean> {
@@ -42,36 +46,6 @@ export class AuthService {
         console.log(`Sending SMS to ${phone} with code ${code}`)
     }
 
-    // /**
-    //  * Генерация кода и сохранение номера телефона и кода в Redis
-    //  * @param phone_number - Номер телефона пользователя
-    //  */
-    // async handlePhoneAuth(phone_number: string): Promise<void> {
-    //     try {
-    //         // Генерация 4-значного кода подтверждения
-    //         const code = this.generateVerificationCode();
-    //         this.logger.log(`Generated code for ${phone_number}: ${code}`);
-
-    //         // Сохранение в Redis (ключ — номер телефона)
-    //         const ttl = 300; // Время жизни данных в секундах (5 минут)
-    //         await this.redisService.set(`phone:${phone_number}`, code, ttl);
-
-    //         // Включите здесь логику отправки кода (e.g., SMS API)
-    //         this.logger.log(`Code saved to Redis for ${phone_number}`);
-    //     } catch (error) {
-    //         this.logger.error('Error handling phone authentication:', error.message);
-    //         throw error;
-    //     }
-    // }
-
-
-    // /**
-    //  * Генерация 4-значного кода подтверждения
-    //  * @returns Четырехзначный код
-    //  */
-    // private generateVerificationCode(): string {
-    //     return Math.floor(1000 + Math.random() * 9000).toString();
-    // }
 }
 
 
