@@ -8,9 +8,8 @@ import { JwtModule } from '@nestjs/jwt';
 @Module({
     imports: [
         RedisModule.register({
-            host: 'localhost',  // Параметры подключения к Redis
+            host: 'redis',  // Параметры подключения к Redis
             port: 6379,
-            password: 'mypassword',
         }),
         forwardRef(() => UsersModule),
         JwtModule.register({

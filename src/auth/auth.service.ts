@@ -18,8 +18,8 @@ export class AuthService {
             this.sendSms(phone, code);
             this.logger.log(`AuthService: sendVerificationCode - sendSms completed`);
         } catch (error) {
-            this.logger.error('AuthService: sendVerificationCode - ERROR:', error);
-            throw error;
+            this.logger.error('AuthService: sendVerificationCode - ERROR:', error); // Логируем исходную ошибку
+            throw new HttpException('Failed to send verification code', HttpStatus.INTERNAL_SERVER_ERROR); // Выбрасываем HttpException
         }
         this.logger.log('AuthService: sendVerificationCode - END'); // Лог в конце функции
     }
@@ -61,12 +61,8 @@ export class AuthService {
                 return false;
             }
         } catch (error) {
-            this.logger.error("Ошибка при получении кода из redis", error);
-            if (error instanceof HttpException) {
-                throw error
-            } else {
-                throw new HttpException('Ошибка верификации кода', HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+            this.logger.error("Ошибка при получении кода из redis", error); // Логируем исходную ошибку
+            throw new HttpException('Ошибка верификации кода', HttpStatus.INTERNAL_SERVER_ERROR); // Выбрасываем HttpException
         }
     }
 

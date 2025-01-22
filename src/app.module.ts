@@ -11,9 +11,8 @@ import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [UsersModule, RedisModule, AuthModule,
     RedisModule.register({
-      host: 'localhost',
+      host: 'redis',
       port: 6379,
-      password: 'mypassword'
     })
   ],
   controllers: [AppController],
