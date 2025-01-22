@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CompletePhoneDto } from './dto/complete-phone.dto';
+import { VerifyCodeDto } from './dto/verify-code.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -36,6 +37,22 @@ export class AuthController {
             } else {
                 // Обработка других типов ошибок
                 throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+    }
+
+    @Post('verify-code') // Новый эндпоинт для верификации
+    @HttpCode(HttpStatus.OK)
+    async verifyCode(@Body() dto: VerifyCodeDto): Promise<{ isValid: boolean }> {
+        try {
+            const isValid = await this.authService.verifyCode(dto.phone_number, dto.verification_code);
+            return { isValid };
+        } catch (error) {
+            this.logger.error('Ошибка верификации:', error);
+            if (error instanceof HttpException) {
+                throw error;
+            } else {
+                throw new HttpException('Ошибка верификации кода', HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
     }

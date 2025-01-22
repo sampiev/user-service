@@ -7,7 +7,6 @@ export class AuthService {
 
     constructor(private readonly redisService: RedisService) { }
 
-
     async sendVerificationCode(phone: string): Promise<void> {
         this.logger.log('AuthService: sendVerificationCode - START');
         const code = this.generateCode();
@@ -25,26 +24,52 @@ export class AuthService {
         this.logger.log('AuthService: sendVerificationCode - END'); // Лог в конце функции
     }
 
-    async verifyCode(phone: string, code: string): Promise<boolean> {
-        try {
-            const storedCode = await this.redisService.getCodeByPhone(phone);
-            if (storedCode === code) {
-                return true
-            } else {
-                return false
-            }
-        } catch (error) {
-            console.error("Failed to get code from redis", error)
-            return false
-        }
-    }
+    // Генерация кода
     private generateCode(): string {
-        return Math.floor(1000 + Math.random() * 9000).toString();
+        const code = Math.floor(1000 + Math.random() * 9000).toString();
+        this.logger.log(`AuthService: generateCode - Generated code: ${code}`); // Добавьте этот лог
+        return code;
     }
+
+    // Отправка кода пользователю (имитация)
     private sendSms(phone: string, code: string) {
         // тут отправка смс
         console.log(`Sending SMS to ${phone} with code ${code}`)
     }
+
+    // Верификация кода присланного пользователем
+    async verifyCode(phone: string, code: string): Promise<boolean> {
+        try {
+            const storedCode = await this.redisService.getCodeByPhone(phone);
+
+            if (!storedCode) {
+                this.logger.warn(`Код для телефона ${phone} не найден.`);
+                return false;
+            }
+
+            this.logger.log(`AuthService: verifyCode - storedCode: "${storedCode}", type: ${typeof storedCode}`);
+            this.logger.log(`AuthService: verifyCode - code: "${code}", type: ${typeof code}`);
+
+            const codeString = String(code); // Явное преобразование code к строке
+
+            if (storedCode === codeString) {
+                this.logger.log(`AuthService: verifyCode - Код для телефона ${phone} успешно верифицирован.`); // Лог успешной верификации
+                await this.redisService.del(phone);
+                return true;
+            } else {
+                this.logger.warn(`Неверный код введен для телефона ${phone}.`);
+                return false;
+            }
+        } catch (error) {
+            this.logger.error("Ошибка при получении кода из redis", error);
+            if (error instanceof HttpException) {
+                throw error
+            } else {
+                throw new HttpException('Ошибка верификации кода', HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+    }
+
 
 }
 
