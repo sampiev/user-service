@@ -19,40 +19,40 @@ export class AuthController {
 
     constructor(private readonly authService: AuthService) { }
 
-    @Post('phone-auth')
+
+
+    //Эндпойнт авторизации-регистрации по номеру телефона
+    @Post('auth-by-phone')
     @HttpCode(HttpStatus.OK)
-    async phoneAuth(@Body() dto: CompletePhoneDto): Promise<{}> {
-        this.logger.log('AuthController: phoneAuth - START');
+    async authByPhone(@Body() dto: CompletePhoneDto): Promise<{}> {
         try {
             await this.authService.sendVerificationCode(dto.phone_number);
-            this.logger.log(`AuthController: phoneAuth - sendVerificationCode completed`);
-            return { message: 'Verification code sent successfully', expiresIn: 300 }; // Возвращаем пустой объект
-        } catch (error) {
-            this.logger.error('AuthController: phoneAuth - ERROR:', error);
+            return { message: 'Код успешно отправлен', expiresIn: 300 };
 
-            // Более подробная обработка ошибок
+        } catch (error) {
             if (error instanceof HttpException) {
-                throw error; // Re-throw HttpException
+                throw error;
             } else if (error instanceof Error) {
-                // Обработка стандартных ошибок JavaScript (например, TypeError, RangeError)
                 throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
             } else {
-                // Обработка других типов ошибок
                 throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
     }
 
+
+
+    //Эндпойнт подтверждения кода
     @Post('verify-code')
     @HttpCode(HttpStatus.OK)
     async verifyCode(@Body() verifyCodeDto: VerifyCodeDto, @Res({ passthrough: true }) res: Response): Promise<any> {
         this.logger.log(`AuthController: verifyCode - START`);
-        try { // Оборачиваем весь код в try...catch для отлова ошибок
+        try {
             const isCodeValid = await this.authService.verifyCode(verifyCodeDto.phone_number, verifyCodeDto.verification_code);
 
             if (isCodeValid) {
                 this.logger.log(`AuthController: verifyCode - Код валиден, вызываем handleUserAfterVerification`);
-                const result = await this.authService.handleUserAfterVerification(verifyCodeDto.phone_number); // <--- await здесь!
+                const result = await this.authService.authByPhone(verifyCodeDto.phone_number);
                 this.logger.log(`AuthController: verifyCode - Результат handleUserAfterVerification:`, result);
 
                 if (result.needsCompletion) {
@@ -67,7 +67,7 @@ export class AuthController {
                 this.logger.warn(`AuthController: verifyCode - Неверный код`);
                 throw new HttpException('Invalid code', HttpStatus.UNAUTHORIZED);
             }
-        } catch (error) { // Обрабатываем ошибки
+        } catch (error) {
             this.logger.error(`AuthController: verifyCode - Ошибка:`, error);
             if (error instanceof HttpException) {
                 throw error;
@@ -77,6 +77,9 @@ export class AuthController {
         }
         this.logger.log(`AuthController: verifyCode - END`);
     }
+
+
+
 }
 
 

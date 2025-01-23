@@ -19,6 +19,8 @@ model User {
   updatedAt        DateTime @updatedAt
   statusId         Int
   status           UserStatus @relation(fields: [statusId], references: [id])
+  roleId           Int       @default(1)
+  role             Role      @relation(fields: [roleId], references: [id])
 }
 
 model UserStatus {
@@ -26,4 +28,10 @@ model UserStatus {
   name             String @unique
   createdAt        DateTime @default(now())
   users            User[]
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
 }

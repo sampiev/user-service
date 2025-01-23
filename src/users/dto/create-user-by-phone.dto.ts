@@ -1,6 +1,6 @@
 import { IsString, IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber } from 'class-validator';
 
-export class CreateUserDto {
+export class CreateUserByPhoneDto {
 
 
     @IsPhoneNumber(null)

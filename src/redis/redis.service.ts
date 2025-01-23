@@ -32,7 +32,7 @@ export class RedisService implements OnModuleDestroy {
       this.logger.log(`Телефон и код сохранены в Redis: ${key} = ${codeString}`);
     } catch (error) {
       this.logger.error(`Ошибка сохранения телефона и кода в Redis: ${error.message}`, error.stack);
-      throw error; // <--- ВАЖНО: пробрасываем ошибку дальше
+      throw error;
     }
   }
 
