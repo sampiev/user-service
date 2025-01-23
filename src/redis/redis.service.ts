@@ -23,16 +23,16 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async storePhoneAndCode(phone: string, code: string, ttl = 300): Promise<void> {
-    const key = phone; // Используем phone напрямую как ключ
+    const key = phone;
     const codeString = String(code);
     try {
       this.logger.log(`Попытка сохранить: Ключ=${key}, Значение=${codeString}, TTL=${ttl}`);
-      const result = await this.client.set(key, codeString, 'EX', ttl); // Сохраняем как строку
+      const result = await this.client.set(key, codeString, 'EX', ttl);
       this.logger.log(`Результат Redis SET: ${result}`);
       this.logger.log(`Телефон и код сохранены в Redis: ${key} = ${codeString}`);
     } catch (error) {
       this.logger.error(`Ошибка сохранения телефона и кода в Redis: ${error.message}`, error.stack);
-      throw error;
+      throw error; // <--- ВАЖНО: пробрасываем ошибку дальше
     }
   }
 
