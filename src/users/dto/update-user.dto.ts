@@ -1,4 +1,5 @@
-import { IsString, IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber } from 'class-validator';
+// update-user.dto.ts
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class UpdateUserDto {
   @IsString()
@@ -6,18 +7,6 @@ export class UpdateUserDto {
   name: string;
 
   @IsString()
-  @IsOptional()
-  surname: string;
-
-  @IsEmail()
-  @IsOptional()
-  email: string;
-
-  @IsPhoneNumber()
-  @IsOptional()
-  phone: string;
-
-  @IsString()
   @IsNotEmpty()
-  password: string;
+  surname: string;
 }

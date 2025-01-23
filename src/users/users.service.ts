@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,9 +19,11 @@ export class UsersService {
         include: { status: true }
       });
     } catch (error) {
-      // Обработка ошибок Prisma (например, если status 'incomplete' не найден)
+      if (error.code === 'P2002') { // Код ошибки Prisma для нарушения уникальности
+        throw new ConflictException('Phone number already exists'); // Выбрасываем ConflictException (409 Conflict)
+      }
       console.error("Error creating user:", error);
-      throw error; // Очень важно пробрасывать ошибку дальше
+      throw error;
     }
   }
 
