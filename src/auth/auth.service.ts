@@ -47,23 +47,44 @@ export class AuthService {
 
 
 
-    // Авторизация и регистрация по телефону
-    async authByPhone(phone: string): Promise<{ accessToken?: string; needsCompletion?: boolean }> {
+    // Регистрация по номеру телефона
+    async registerByPhone(phone: string): Promise<{ accessToken?: string; needsCompletion: true }> {
         try {
-            let user = await this.usersService.findByPhone(phone);
+            const user = await this.usersService.createUserByPhone({ phone_number: phone });
+
+            const payload = {
+                sub: user.user_id,
+                phone: user.phone_number,
+                role: user.role.name,
+            };
+
+            const accessToken = await this.jwtService.signAsync(payload);
+
+            return { accessToken, needsCompletion: true };
+        } catch (error) {
+            console.error('Ошибка при регистрации пользователя:', error);
+            throw error;
+        }
+    }
+
+
+
+    // Авторизация по номеру телефона
+    async loginByPhone(phone: string): Promise<{ accessToken: string }> {
+        try {
+            const user = await this.usersService.findByPhone(phone);
 
             if (!user) {
-                user = await this.usersService.createUserByPhone({ phone_number: phone });
+                throw new UnauthorizedException('Пользователь с таким номером не найден');
             }
 
-            if (user.status.name === 'incomplete') {
-                return { needsCompletion: true };
+            if (user.statusName !== 'active') {
+                throw new UnauthorizedException('Аккаунт не активирован');
             }
 
             const payload = {
                 sub: user.user_id,
                 phone: user.phone_number,
-                status: user.status.name,
                 role: user.role.name,
             };
 
@@ -71,7 +92,7 @@ export class AuthService {
 
             return { accessToken };
         } catch (error) {
-            console.error('Ошибка обработки пользователя после верификации:', error);
+            console.error('Ошибка при авторизации пользователя:', error);
             throw error;
         }
     }

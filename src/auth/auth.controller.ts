@@ -45,37 +45,41 @@ export class AuthController {
     //Эндпойнт подтверждения кода
     @Post('verify-code')
     @HttpCode(HttpStatus.OK)
-    async verifyCode(@Body() verifyCodeDto: VerifyCodeDto, @Res({ passthrough: true }) res: Response): Promise<any> {
-        this.logger.log(`AuthController: verifyCode - START`);
+    async verifyCode(@Body() verifyCodeDto: VerifyCodeDto, @Res({ passthrough: true }) res: Response) {
         try {
-            const isCodeValid = await this.authService.verifyCode(verifyCodeDto.phone_number, verifyCodeDto.verification_code);
+            const isCodeValid = await this.authService.verifyCode(
+                verifyCodeDto.phone_number,
+                verifyCodeDto.verification_code,
+            );
 
             if (isCodeValid) {
-                this.logger.log(`AuthController: verifyCode - Код валиден, вызываем handleUserAfterVerification`);
-                const result = await this.authService.authByPhone(verifyCodeDto.phone_number);
-                this.logger.log(`AuthController: verifyCode - Результат handleUserAfterVerification:`, result);
+                let result;
+                const existingUser = await this.usersService.findByPhone(verifyCodeDto.phone_number);
+
+                if (existingUser) {
+                    result = await this.authService.loginByPhone(verifyCodeDto.phone_number);
+                } else {
+                    result = await this.authService.registerByPhone(verifyCodeDto.phone_number);
+                }
 
                 if (result.needsCompletion) {
-                    this.logger.log(`AuthController: verifyCode - needsCompletion: true`);
-                    return { needsCompletion: true };
+                    res.setHeader('Authorization', `Bearer ${result.accessToken}`);
+                    return { needsCompletion: true, accessToken: result.accessToken };
                 } else if (result.accessToken) {
-                    this.logger.log(`AuthController: verifyCode - accessToken: ${result.accessToken}`);
-                    res.header('Authorization', `Bearer ${result.accessToken}`);
-                    return { accessToken: result.accessToken };
+                    res.setHeader('Authorization', `Bearer ${result.accessToken}`);
+                    return process.env.NODE_ENV === 'development' ? { accessToken: result.accessToken } : {};
                 }
             } else {
-                this.logger.warn(`AuthController: verifyCode - Неверный код`);
                 throw new HttpException('Invalid code', HttpStatus.UNAUTHORIZED);
             }
         } catch (error) {
-            this.logger.error(`AuthController: verifyCode - Ошибка:`, error);
+            console.error(error);
             if (error instanceof HttpException) {
-                throw error;
-            } else {
-                throw new HttpException('An unexpected error occurred', HttpStatus.INTERNAL_SERVER_ERROR);
+                throw error
             }
+
+            throw new HttpException("Непредвиденная ошибка", HttpStatus.INTERNAL_SERVER_ERROR)
         }
-        this.logger.log(`AuthController: verifyCode - END`);
     }
 
 

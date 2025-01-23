@@ -63,11 +63,11 @@ export class UsersService {
         data: {
           name: data.name,
           surname: data.surname,
-          status: {
-            connect: { name: 'active' },
-          },
+          avatarUrl: data.avatarUrl,
+          status: { connect: { name: 'incomplete' } },
+          role: { connect: { name: 'user' } },
         },
-        include: { status: true }
+        include: { status: true, role: true },
       });
     } catch (error) {
       if (error.code === 'P2025') {
