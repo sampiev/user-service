@@ -45,7 +45,6 @@ export class UsersController {
 
 
 
-
     @Get('me')
     @UseGuards(AuthGuard('jwt'))
     getProfile(@Request() req) {

@@ -39,8 +39,13 @@ export class UsersService {
   async findByPhone(phone: string) {
     try {
       return this.prismaService.prismaClient.user.findUnique({
-        where: { phone_number: phone },
-        include: { status: true },
+        where: {
+          phone_number: phone
+        },
+        include: {
+          status: true,
+          role: true
+        },
       });
     } catch (error) {
       console.error("Error finding user by phone:", error);

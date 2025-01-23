@@ -53,18 +53,20 @@ export class AuthService {
             let user = await this.usersService.findByPhone(phone);
 
             if (!user) {
-                console.log("AuthService: Пользователь не найден - Регистрация");
                 user = await this.usersService.createUserByPhone({ phone_number: phone });
-                console.log("AuthService: Пользователь зарегистрирован:", user);
-            } else {
-                console.log("AuthService: Пользователь найден - Авторизация", user);
             }
 
             if (user.status.name === 'incomplete') {
                 return { needsCompletion: true };
             }
 
-            const payload = { sub: user.user_id, phone: user.phone_number, status: user.status.name };
+            const payload = {
+                sub: user.user_id,
+                phone: user.phone_number,
+                status: user.status.name,
+                role: user.role.name,
+            };
+
             const accessToken = await this.jwtService.signAsync(payload);
 
             return { accessToken };
