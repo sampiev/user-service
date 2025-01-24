@@ -95,8 +95,10 @@ export class UsersService {
 
 
   async findByPhone(phone: string) {
+    this.logger.debug(`findByPhone: Attempting to find user with phone: ${phone}`);
+
     try {
-      return this.prismaService.prismaClient.user.findUnique({
+      const user = await this.prismaService.prismaClient.user.findUnique({
         where: {
           phone_number: phone,
         },
@@ -105,6 +107,14 @@ export class UsersService {
           role: true,
         },
       });
+
+      if (user) {
+        this.logger.debug(`findByPhone: User found: ${JSON.stringify(user)}`);
+      } else {
+        this.logger.warn(`findByPhone: No user found with phone: ${phone}`);
+      }
+
+      return user;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         this.logger.error(`findByPhone: Prisma Error ${error.code}: ${error.message}`, error.stack);
@@ -114,6 +124,7 @@ export class UsersService {
       throw new InternalServerErrorException('Failed to find user');
     }
   }
+
 
 
 

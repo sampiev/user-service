@@ -30,45 +30,58 @@ export class AuthController {
     @Post('verify-code')
     @HttpCode(HttpStatus.OK)
     async verifyCode(@Body() verifyCodeDto: VerifyCodeDto, @Res({ passthrough: true }) res: Response) {
-        this.logger.log('verifyCode: запрос на верификацию кода для телефона ' + verifyCodeDto.phone_number); // Добавляем лог
+        this.logger.log('verifyCode: запрос на верификацию кода для телефона ' + verifyCodeDto.phone_number);  // Лог перед верификацией
+
         try {
             const isCodeValid = await this.authService.verifyCode(
                 verifyCodeDto.phone_number,
                 verifyCodeDto.verification_code,
             );
 
+            // Лог, если код неверный
             if (!isCodeValid) {
-                throw new UnauthorizedException('Invalid code'); // Более конкретное исключение
+                this.logger.warn('verifyCode: Неверный код для телефона ' + verifyCodeDto.phone_number); // Лог при неудаче
+                throw new UnauthorizedException('Invalid code');
             }
 
             let result;
+
+            // Проверка существующего пользователя
             const existingUser = await this.usersService.findByPhone(verifyCodeDto.phone_number);
 
             if (existingUser) {
-                this.logger.log('verifyCode: Пользователь найден, вызываем loginByPhone'); // Добавляем лог
+                this.logger.log('verifyCode: Пользователь найден, вызываем loginByPhone');
                 result = await this.authService.loginByPhone(verifyCodeDto.phone_number);
             } else {
-                this.logger.log('verifyCode: Пользователь не найден, вызываем registerByPhone'); // Добавляем лог
+                this.logger.log('verifyCode: Пользователь не найден, вызываем registerByPhone');
                 result = await this.authService.registerByPhone(verifyCodeDto.phone_number);
             }
 
+            // Логирование результата
             if (result.needsCompletion) {
+                this.logger.log(`verifyCode: Необходима дополнительная информация для пользователя с телефоном ${verifyCodeDto.phone_number}`);
                 res.setHeader('Authorization', `Bearer ${result.accessToken}`);
                 return { needsCompletion: true, accessToken: result.accessToken, userId: result.userId };
             } else if (result.accessToken) {
+                this.logger.log(`verifyCode: Успешная авторизация пользователя с телефоном ${verifyCodeDto.phone_number}`);
                 res.setHeader('Authorization', `Bearer ${result.accessToken}`);
-                return process.env.NODE_ENV === 'development' ? { accessToken: result.accessToken } : {};
+                this.logger.log(`verifyCode: Результат авторизации - ${JSON.stringify(result)}`);
+                return { accessToken: result.accessToken, userId: result.userId };
             } else {
+                this.logger.error('verifyCode: Не удалось завершить запрос. Результат не содержит токена');
                 throw new InternalServerErrorException('Непредвиденная ошибка');
             }
         } catch (error) {
-            this.logger.error('verifyCode Error:', error); // Use logger
+            // Логирование ошибки
+            this.logger.error('verifyCode Error:', error);  // Лог при ошибке
             if (error instanceof HttpException) {
-                throw error; // Re-throw HttpException instances
+                throw error; // Если ошибка — это HttpException, пробрасываем ее дальше
             }
-            throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR); // Default error handling
+            // Лог при внутренних ошибках
+            throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 }
 
 

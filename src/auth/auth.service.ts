@@ -39,6 +39,7 @@ export class AuthService {
     }
 
     private generateJwtPayload(user): any {
+        this.logger.debug(`Generating JWT payload for user: ${JSON.stringify(user)}`);
         return {
             sub: user.user_id,
             phone: user.phone_number,
@@ -59,27 +60,43 @@ export class AuthService {
         }
     }
 
-    async loginByPhone(phone: string): Promise<{ accessToken: string }> {
-        this.logger.log(`loginByPhone: вход пользователя с телефоном ${phone}`)
+    async loginByPhone(phone: string): Promise<{ accessToken: string; userId: number }> {
+        this.logger.log(`loginByPhone: вход пользователя с телефоном ${phone}`);
+
         try {
+            // Логируем начало попытки поиска пользователя по телефону
+            this.logger.debug(`loginByPhone: Пытаемся найти пользователя с номером ${phone}`);
             const user = await this.usersService.findByPhone(phone);
 
+            // Логируем, если пользователь не найден
             if (!user) {
+                this.logger.warn(`loginByPhone: Пользователь с номером ${phone} не найден`);
                 throw new UnauthorizedException('Пользователь с таким номером не найден');
             }
 
+            // Логируем статус аккаунта пользователя
+            this.logger.debug(`loginByPhone: Статус аккаунта пользователя: ${user.statusName}`);
+
             if (user.statusName !== 'active') {
+                this.logger.warn(`loginByPhone: Аккаунт пользователя ${phone} не активирован`);
                 throw new UnauthorizedException('Аккаунт не активирован');
             }
 
+            // Генерация payload и логирование его содержимого
             const payload = this.generateJwtPayload(user);
+            this.logger.debug(`loginByPhone: Сгенерирован payload для JWT: ${JSON.stringify(payload)}`);
+
+            // Логируем генерацию токена
             const accessToken = await this.jwtService.signAsync(payload);
-            return { accessToken };
+            this.logger.debug(`loginByPhone: Сгенерирован Access Token: ${accessToken}`);
+
+            return { accessToken, userId: user.user_id };
         } catch (error) {
             this.logger.error(`loginByPhone: ERROR: ${error.message}`, error.stack);
             throw error;
         }
     }
+
 
     async verifyCode(phone: string, code: string): Promise<boolean> {
         try {
