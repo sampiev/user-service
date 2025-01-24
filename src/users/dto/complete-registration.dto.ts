@@ -1,7 +1,7 @@
-// update-user.dto.ts
+
 import { IsString, IsOptional } from 'class-validator';
 
-export class UpdateUserDto {
+export class CompleteRegistrationDto {
   @IsString()
   name: string;
 
